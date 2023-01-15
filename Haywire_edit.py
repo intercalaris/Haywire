@@ -91,3 +91,5 @@ pop, log = algorithms.eaSimple(pop, toolbox, cxpb=0.5, mutpb=0.2, ngen=10, stats
 
 # Print the results
 print("Best individual is: %s\nwith fitness: %s" % (hof[0], hof[0].fitness))
+
+
