@@ -56,47 +56,110 @@ for i in range(10):
 # Define reward function for Reinforcement Learning
 def update_weights(weights, rewards):
     alpha = 0.1 # learning rate
+    if len(weights) != len(rewards):
+        raise ValueError("Number of weights and rewards do not match")
     for i in range(len(weights)):
         weights[i] += alpha * rewards[i]
     return weights
 
+
 # Train the model with Reinforcement Learning
 for i in range(10):
     model.fit(X_train, to_categorical(y_train), epochs=1, batch_size=32, verbose=1)
-    rewards = model.evaluate(X_test, to_categorical(y_test), verbose=0)
+    rewards = [model.evaluate(X_test, to_categorical(y_test), verbose=0)[1]]
     model.set_weights(update_weights(model.get_weights(), rewards))
+
 
 # Swarm Intelligence
 
 # Define Agent class
 class Agent:
-    def __init__(self, decision_making_ability):
+    def __init__(self, decision_making_ability, model, data):
         self.decision_making_ability = decision_making_ability
+        self.model = model
+        self.data = data
+        self.loss = 0
     
-    def communicate(self, other_agents):
-        # Implement communication mechanism
+    def communicate(self):
         pass
+    
+    def update_model(self):
+        self.model.fit(self.data[0], self.data[1], epochs=1, batch_size=32)
+        self.loss = self.model.evaluate(self.data[2], self.data[3], verbose=0)
+    
+    def get_weights(self):
+        return self.model.get_weights()
+    
+    def set_weights(self, weights):
+        self.model.set_weights(weights)
 
 # Create agents
-agents = [Agent(decision_making_ability) for decision_making_ability in range(10)]
+agents = [Agent(decision_making_ability, model, (X_train, to_categorical(y_train), X_test, to_categorical(y_test))) for decision_making_ability in range(10)]
+
+# Train the model
+for i in range(10):
+    for agent in agents:
+        agent.update_model()
+        agent.communicate()
+
+# Optimization Techniques
+
+# Implement optimization function
+def particle_swarm_optimization(particles):
+    # Define optimization parameters
+    num_particles = len(particles)
+    num_dimensions = len(particles[0])
+    max_velocity = 0.2
+    min_velocity = -0.2
+    max_position = 1
+    min_position = 0
+    c1 = 2
+    c2 = 2
+    inertia = 0.7
+    global_best = particles[0]
+    global_best_fitness = float('inf')
+    
+    # Initialize velocity and position
+    velocity = [[random.uniform(min_velocity, max_velocity) for _ in range(num_dimensions)] for _ in range(num_particles)]
+    position = [[random.uniform(min_position, max_position) for _ in range(num_dimensions)] for _ in range(num_particles)]
+    
+    # Iterate over the number of iterations
+    for i in range(100):
+        for j in range(num_particles):
+            # Update velocity
+            velocity[j] = [inertia * v + c1 * random.random() * (global_best[j] - p) + c2 * random.random() * (best_fitness[j] - p) for v, p in zip(velocity[j], position[j])]
+            velocity[j] = [min(max(v, min_velocity), max_velocity) for v in velocity[j]]
+            
+            # Update position
+            position[j] = [p + v for p, v in zip(position[j], velocity[j])]
+            position[j] = [min(max(p, min_position), max_position) for p in position[j]]
+            
+            # Update personal best
+            if fitness[j] < best_fitness[j]:
+                best_fitness[j] = fitness[j]
+                best_position[j] = position[j]
+            
+            # Update global best
+            if fitness[j] < global_best_fitness:
+                global_best_fitness = fitness[j]
+                global_best = position[j]
+                
+    return global_best
+
+
+
+# Create a toolbox for optimization
+toolbox = base.Toolbox()
+toolbox.register("evaluate", evaluate)
+toolbox.register("update", update)
 
 # Train the model
 for i in range(10):
     model.fit(X_train, to_categorical(y_train), epochs=1, batch_size=32, verbose=1)
     for agent in agents:
         agent.communicate(agents)
+        particle_swarm_optimization(agent)
 
-# Optimization Techniques
-
-# Implement optimization function
-def particle_swarm_optimization(particles):
-    # Implement PSO algorithm
-    pass
-
-# Train the model
-for i in range(10):
-    model.fit(X_train, to_categorical(y_train), epochs=1, batch_size=32, verbose=1)
-    particle_swarm_optimization(agents)
 
 # Evaluate the final model
 _, accuracy = model.evaluate(X_test, to_categorical(y_test), verbose=0)
