@@ -31,16 +31,22 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_
 # Swarm Intelligence
 
 # Define Agent class
-class Agent:
+creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+creator.create("Particle", list, fitness=creator.FitnessMax, speed=list, smin=None, smax=None, best=None)
+
+class Agent(creator.Particle):
     def __init__(self, decision_making_ability, model, data):
+        super(Agent, self).__init__()
         self.decision_making_ability = decision_making_ability
         self.model = model
         self.data = data
         self.loss = 0
 
-    
     def communicate(self):
-        pass
+        weights = self.get_weights()
+        for other in agents:
+            if other != self:
+                other.set_weights(weights)
     
     def update_model(self):
         self.model.fit(self.data[0], self.data[1], epochs=1, batch_size=32)
@@ -64,6 +70,7 @@ for i in range(10):
 
 # Optimization Techniques
 # Define optimization function
+particles = agents
 def PSO(particle, particles, n_iterations):
     # Define optimization parameters
     num_particles = len(particles)
