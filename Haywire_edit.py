@@ -28,13 +28,6 @@ model.compile(loss='binary_crossentropy', optimizer=Adam(), metrics=['accuracy']
 X, y = make_classification(n_samples=1000, n_features=2, n_informative=2, n_redundant=0, n_classes=2, n_clusters_per_class=1)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1)
 
-
-
-
-
-
-
-
 # Swarm Intelligence
 
 # Define Agent class
@@ -67,16 +60,6 @@ for i in range(10):
     for agent in agents:
         agent.update_model()
         agent.communicate()
-
-
-
-
-
-
-
-
-
-
 
 
 # Optimization Techniques
@@ -112,9 +95,6 @@ def PSO(particle, particles, n_iterations):
                 global_best = particles[j]
                 global_best_fitness = global_best.loss
     return global_best
-
-
-
 
 
 # Run swarm optimization
