@@ -11,7 +11,10 @@ from matplotlib.colors import ListedColormap
 from sklearn.datasets import make_classification
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
-from deap import base, creator, tools, algorithms
+from deap import base
+from deap import creator
+from deap import tools
+from deap import algorithms
 
 # Create a neural network model
 model = Sequential()
@@ -24,129 +27,14 @@ model.compile(loss='binary_crossentropy', optimizer=Adam(), metrics=['accuracy']
 X, y = make_classification(n_samples=1000, n_features=2, n_informative=2, n_redundant=0, n_classes=2, n_clusters_per_class=1)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1)
 
-# Swarm Intelligence
-
-# Define Agent class
-creator.create("FitnessMax", base.Fitness, weights=(1.0,))
-creator.create("Particle", list, fitness=creator.FitnessMax, speed=list, smin=None, smax=None, best=None)
-
-class Agent(creator.Particle):
-    def __init__(self, decision_making_ability, model, data, agents):
-        super(Agent, self).__init__()
-        self.decision_making_ability = decision_making_ability
-        self.model = model
-        self.data = data
-        self.loss = 0
-        self.agents = agents
-
-    def communicate(self):
-        weights = self.get_weights()
-        for other in self.agents:
-            if other != self:
-                other.set_weights(weights)
-
-    def update_model(self):
-        self.model.fit(self.data[0], self.data[1], epochs=1, batch_size=32)
-        self.loss = self.model.evaluate(self.data[2], self.data[3], verbose=0)
-    
-    def get_weights(self):
-        return self.model.get_weights()
-    
-    def set_weights(self, weights):
-        self.model.set_weights(weights)
-
-# Create agents
-agents = []
-agents = [Agent(decision_making_ability, model, (X_train, to_categorical(y_train), X_test, to_categorical(y_test)), agents) for decision_making_ability in range(10)]
-
 # Train the model
-for i in range(10):
-    for agent in agents:
-        agent.update_model()
-        agent.communicate()
+model.fit(X_train, to_categorical(y_train), epochs=10, batch_size=32, verbose=1)
 
-# Create global best agent
-global_best_agent = max(agents, key=lambda x: x.loss)
-
-# Optimization Techniques
-# Define optimization function
-
-
-def PSO(particles, n_iterations):
-    # Initialize variables
-    inertia = 0.5 # starting value for inertia
-    inertia_decay = 0.9 # decay rate for inertia
-    c1 = 1 # starting value for c1
-    c1_decay = 0.99 # decay rate for c1
-    c2 = 2 # starting value for c2
-    c2_decay = 0.99 # decay rate for c2
-    n_iterations_without_improvement = 10 # number of iterations without improvement before decay
-
-    global_best_agent = max(particles, key=lambda x: x.loss)
-    n_particles = len(particles)
-    dimensions = len(particles[0].get_weights())
-    best_fitness = global_best_agent.loss
-    iteration_without_improvement = 0
-    position = [list(p.get_weights()) for p in particles]
-    velocity = [[0 for _ in range(dimensions)] for _ in range(n_particles)]
-    personal_best = [list(p.get_weights()) for p in particles]
-
-    for iteration in range(n_iterations):
-        # Update velocity and position
-        for i in range(n_particles):
-            r1 = random.uniform(0, c1)
-            r2 = random.uniform(0, c2)
-            for j in range(dimensions):
-                velocity[i][j] = inertia * velocity[i][j] + r1 * (personal_best[i][j] - position[i][j]) + r2 * (global_best_agent.get_weights()[j] - position[i][j])
-                position[i][j] += velocity[i][j]
-                
-        # Update agents with new positions
-        for i in range(n_particles):
-            particles[i].set_weights(position[i])
-            particles[i].update_model()
-        
-        # Update personal best and global best
-        for i in range(n_particles):
-            if np.greater(particles[i].loss, personal_best[i]).all():
-                personal_best[i] = particles[i].get_weights()
-            if particles[i].loss > best_fitness:
-                best_fitness = particles[i].loss
-                global_best_agent = particles[i]
-                iteration_without_improvement = 0
-            else:
-                iteration_without_improvement += 1
-                
-        # Check if decay is needed
-        if iteration_without_improvement >= n_iterations_without_improvement:
-            inertia *= inertia_decay
-            c1 *= c1_decay
-            c2 *= c2_decay
-            iteration_without_improvement = 0
-    
-    print(global_best_agent)       
-    return global_best_agent
-
-global_best_agent = PSO(agents, 10)
-
-
-# Run swarm optimization
-global_best = tools.selBest(particles, k=1, fit_attr='fitness')[0]
-PSO(global_best, agents)
-best_agent = tools.selBest(agents, k=1)[0]
-print("Best agent's accuracy: ", best_agent.loss)
-
-
-# Train the model
-for i in range(10):
-    for agent in agents:
-        agent.update_model()
-        agent.communicate()
-
-# Evaluate the final model
+# Evaluate the model
 _, accuracy = model.evaluate(X_test, to_categorical(y_test), verbose=0)
 print('Accuracy: %.2f' % (accuracy*100))
 
-# Visualize the final model
+# Visualize the model
 x_min, x_max = X[:, 0].min() - .5, X[:, 0].max() + .5
 y_min, y_max = X[:, 1].min() - .5, X[:, 1].max() + .5
 h = .02
@@ -159,5 +47,44 @@ cm_bright = ListedColormap(['#FF0000', '#0000FF'])
 ax = plt.subplot()
 ax.contourf(xx, yy, Z, cmap=cm, alpha=.8)
 ax.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=cm_bright, edgecolors='k')
-
 plt.show()
+
+# Swarm Intelligence
+
+# Define the swarm
+creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+creator.create("Particle", list, fitness=creator.FitnessMax, speed=list, smin=None, smax=None, best=None)
+
+toolbox = base.Toolbox()
+
+# Define the swarm optimization functions
+def updateParticle(particle, best, phi1, phi2):
+    for i in range(len(particle)):
+        particle[i] += phi1 * random.uniform(0, 1) * (best[i] - particle[i]) + phi2 * random.uniform(0, 1) * (global_best[i] - particle[i])
+    return particle
+
+def evaluate(particle):
+    model.set_weights(particle)
+    _, accuracy = model.evaluate(X_test, to_categorical(y_test), verbose=0)
+    return accuracy,
+
+toolbox.register("particle", tools.initRepeat, creator.Particle, toolbox.attribute, n=len(model.get_weights()))
+toolbox.register("population", tools.initRepeat, list, toolbox.particle)
+toolbox.register("update", updateParticle, phi1=2.0, phi2=2.0)
+toolbox.register("evaluate", lambda model, particle: model.evaluate(X_test, to_categorical(y_test), verbose=0)[1])
+
+# Define the swarm optimization algorithm
+pop = toolbox.population(n=10)
+hof = tools.HallOfFame(1)
+stats = tools.Statistics(lambda ind: ind.fitness.values)
+stats.register("avg", np.mean)
+stats.register("std", np.std)
+stats.register("min", np.min)
+stats.register("max", np.max)
+
+pop, log = algorithms.eaSimple(pop, toolbox, cxpb=0.5, mutpb=0.2, ngen=10, stats=stats, halloffame=hof)
+
+# Print the results
+print("Best individual is: %s\nwith fitness: %s" % (hof[0], hof[0].fitness))
+
+

@@ -75,7 +75,6 @@ toolbox = base.Toolbox()
 toolbox.register("particle", tools.initRepeat, creator.Particle, toolbox.attribute, n=len(model.get_weights()))
 toolbox.register("population", tools.initRepeat, list, toolbox.particle)
 toolbox.register("update", updateParticle, phi1=2.0, phi2=2.0)
-
 toolbox.register("evaluate", lambda model, particle: model.evaluate(X_test, to_categorical(y_test), verbose=0)[1])
 
 # Define the swarm optimization algorithm
