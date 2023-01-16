@@ -65,54 +65,68 @@ for i in range(10):
         agent.update_model()
         agent.communicate()
 
+# Create global best agent
+global_best_agent = max(agents, key=lambda x: x.loss)
 
 # Optimization Techniques
 # Define optimization function
 
 
-inertia = 0.5 # starting value for inertia
-inertia_decay = 0.9 # decay rate for inertia
-c1 = 1 # starting value for c1
-c1_decay = 0.99 # decay rate for c1
-c2 = 2 # starting value for c2
-c2_decay = 0.99 # decay rate for c2
-n_iterations_without_improvement = 10 # number of iterations without improvement before decay
-particles = agents
 def PSO(particles, n_iterations):
     # Initialize variables
-    n_particles = len(particles)
-    dimensions = len(particles[0].get_weights())
-
-    position = [list(p) for p in particles]
-    velocity = [[0 for _ in range(dimensions)] for _ in range(n_particles)]
+    inertia = 0.5 # starting value for inertia
+    inertia_decay = 0.9 # decay rate for inertia
+    c1 = 1 # starting value for c1
+    c1_decay = 0.99 # decay rate for c1
+    c2 = 2 # starting value for c2
+    c2_decay = 0.99 # decay rate for c2
+    n_iterations_without_improvement = 10 # number of iterations without improvement before decay
 
     global_best_agent = max(particles, key=lambda x: x.loss)
-    
-    for i in range(n_iterations):
-        for j, particle in enumerate(particles):
-            # Update velocity
-            for k in range(dimensions):
-                velocity[j][k] = inertia * velocity[j][k] + c1 * random.random() * (global_best_agent.get_weights()[k] - position[j][k]) + c2 * random.random() * (particles[j][k] - position[j][k])
+    n_particles = len(particles)
+    dimensions = len(particles[0].get_weights())
+    best_fitness = global_best_agent.loss
+    iteration_without_improvement = 0
+    position = [list(p.get_weights()) for p in particles]
+    velocity = [[0 for _ in range(dimensions)] for _ in range(n_particles)]
+    personal_best = [list(p.get_weights()) for p in particles]
 
-            # Update position
-            for k in range(dimensions):
-                position[j][k] += velocity[j][k]
-
-            # Update personal best
-            if particle.loss < particle.best:
-                particle.best = particle.loss
-                particle.best_position = list(particle)
-
-            # Update global best
-            if particle.loss < global_best_agent.loss:
-                global_best_agent = particle
-
-        # Update inertia, c1, and c2
-        if i % n_iterations_without_improvement == 0:
+    for iteration in range(n_iterations):
+        # Update velocity and position
+        for i in range(n_particles):
+            r1 = random.uniform(0, c1)
+            r2 = random.uniform(0, c2)
+            for j in range(dimensions):
+                velocity[i][j] = inertia * velocity[i][j] + r1 * (personal_best[i][j] - position[i][j]) + r2 * (global_best_agent.get_weights()[j] - position[i][j])
+                position[i][j] += velocity[i][j]
+                
+        # Update agents with new positions
+        for i in range(n_particles):
+            particles[i].set_weights(position[i])
+            particles[i].update_model()
+        
+        # Update personal best and global best
+        for i in range(n_particles):
+            if np.greater(particles[i].loss, personal_best[i]).all():
+                personal_best[i] = particles[i].get_weights()
+            if particles[i].loss > best_fitness:
+                best_fitness = particles[i].loss
+                global_best_agent = particles[i]
+                iteration_without_improvement = 0
+            else:
+                iteration_without_improvement += 1
+                
+        # Check if decay is needed
+        if iteration_without_improvement >= n_iterations_without_improvement:
             inertia *= inertia_decay
             c1 *= c1_decay
             c2 *= c2_decay
+            iteration_without_improvement = 0
+    
+    print(global_best_agent)       
+    return global_best_agent
 
+global_best_agent = PSO(agents, 10)
 
 
 # Run swarm optimization
