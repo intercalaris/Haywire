@@ -11,11 +11,7 @@ from matplotlib.colors import ListedColormap
 from sklearn.datasets import make_classification
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
-from deap import base
-from deap import creator
-from deap import tools
-from deap import algorithms
-
+from deap import base, creator, tools, algorithms
 
 # Create a neural network model
 model = Sequential()
@@ -35,19 +31,20 @@ creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 creator.create("Particle", list, fitness=creator.FitnessMax, speed=list, smin=None, smax=None, best=None)
 
 class Agent(creator.Particle):
-    def __init__(self, decision_making_ability, model, data):
+    def __init__(self, decision_making_ability, model, data, agents):
         super(Agent, self).__init__()
         self.decision_making_ability = decision_making_ability
         self.model = model
         self.data = data
         self.loss = 0
+        self.agents = agents
 
     def communicate(self):
         weights = self.get_weights()
-        for other in agents:
+        for other in self.agents:
             if other != self:
                 other.set_weights(weights)
-    
+
     def update_model(self):
         self.model.fit(self.data[0], self.data[1], epochs=1, batch_size=32)
         self.loss = self.model.evaluate(self.data[2], self.data[3], verbose=0)
@@ -59,7 +56,8 @@ class Agent(creator.Particle):
         self.model.set_weights(weights)
 
 # Create agents
-agents = [Agent(decision_making_ability, model, (X_train, to_categorical(y_train), X_test, to_categorical(y_test))) for decision_making_ability in range(10)]
+agents = []
+agents = [Agent(decision_making_ability, model, (X_train, to_categorical(y_train), X_test, to_categorical(y_test)), agents) for decision_making_ability in range(10)]
 
 # Train the model
 for i in range(10):
@@ -70,42 +68,59 @@ for i in range(10):
 
 # Optimization Techniques
 # Define optimization function
+
+
+inertia = 0.5 # starting value for inertia
+inertia_decay = 0.9 # decay rate for inertia
+c1 = 1 # starting value for c1
+c1_decay = 0.99 # decay rate for c1
+c2 = 2 # starting value for c2
+c2_decay = 0.99 # decay rate for c2
+n_iterations_without_improvement = 10 # number of iterations without improvement before decay
 particles = agents
-def PSO(particle, particles, n_iterations):
-    # Define optimization parameters
-    num_particles = len(particles)
-    num_dimensions = len(particle.get_weights())
-    max_velocity = 0.2
-    min_velocity = -0.2
-    max_position = 1
-    min_position = 0
-    c1 = 2
-    c2 = 2
-    inertia = 0.7
-    global_best = particles[0]
-    global_best_fitness = global_best.loss
+def PSO(particles, n_iterations):
+    # Initialize variables
+    n_particles = len(particles)
+    dimensions = len(particles[0].get_weights())
 
-    # Initialize velocity and position
-    velocity = [[random.uniform(min_velocity, max_velocity) for _ in range(num_dimensions)] for _ in range(num_particles)]
-    position = [[random.uniform(min_position, max_position) for _ in range(num_dimensions)] for _ in range(num_particles)]
+    position = [list(p) for p in particles]
+    velocity = [[0 for _ in range(dimensions)] for _ in range(n_particles)]
 
-    # Iterate over the number of iterations
+    global_best_agent = max(particles, key=lambda x: x.loss)
+    
     for i in range(n_iterations):
-        for j in range(num_particles):
+        for j, particle in enumerate(particles):
             # Update velocity
-            velocity[j] = [inertia * v + c1 * random.random() * (global_best.get_weights() - p) + c2 * random.random() * (particles[j].get_weights() - p) for v, p in zip(velocity[j], position[j])]
-            position[j] = [p + v for p, v in zip(position[j], velocity[j])]
-            particles[j].set_weights(position[j])
-            particles[j].update_model()
+            for k in range(dimensions):
+                velocity[j][k] = inertia * velocity[j][k] + c1 * random.random() * (global_best_agent.get_weights()[k] - position[j][k]) + c2 * random.random() * (particles[j][k] - position[j][k])
+
+            # Update position
+            for k in range(dimensions):
+                position[j][k] += velocity[j][k]
+
+            # Update personal best
+            if particle.loss < particle.best:
+                particle.best = particle.loss
+                particle.best_position = list(particle)
+
             # Update global best
-            if particles[j].loss < global_best_fitness:
-                global_best = particles[j]
-                global_best_fitness = global_best.loss
-    return global_best
+            if particle.loss < global_best_agent.loss:
+                global_best_agent = particle
+
+        # Update inertia, c1, and c2
+        if i % n_iterations_without_improvement == 0:
+            inertia *= inertia_decay
+            c1 *= c1_decay
+            c2 *= c2_decay
+
 
 
 # Run swarm optimization
-PSO(agent, agents, 10)
+global_best = tools.selBest(particles, k=1, fit_attr='fitness')[0]
+PSO(global_best, agents)
+best_agent = tools.selBest(agents, k=1)[0]
+print("Best agent's accuracy: ", best_agent.loss)
+
 
 # Train the model
 for i in range(10):
