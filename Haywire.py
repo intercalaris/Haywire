@@ -1,6 +1,5 @@
 import numpy as np
 import random
-import pyswarms
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
@@ -73,7 +72,7 @@ def updateParticle(particle, best, phi1, phi2):
         particle[i] += phi1 * random.uniform(0, 1) * (best[i] - particle[i]) + phi2 * random.uniform(0, 1) * (best[i] - particle[i])
 
 toolbox = base.Toolbox()
-toolbox.register("particle", pyswarms.single.GlobalBestPSO.create_particle, size=len(model.get_weights()))
+toolbox.register("particle", tools.initRepeat, creator.Particle, toolbox.attribute, n=len(model.get_weights()))
 toolbox.register("population", tools.initRepeat, list, toolbox.particle)
 toolbox.register("update", updateParticle, phi1=2.0, phi2=2.0)
 toolbox.register("evaluate", lambda model, particle: model.evaluate(X_test, to_categorical(y_test), verbose=0)[1])
