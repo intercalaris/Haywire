@@ -1,37 +1,55 @@
-import numpy as np
-import random
-from keras.models import Sequential, load_model
-from keras.layers import Dense
-from keras.optimizers import Adam
-from keras.utils import to_categorical
-from keras.callbacks import TensorBoard
-from matplotlib import pyplot as plt, colors
+from keras.layers import Dense, LeakyReLU, Dropout
+from keras.models import Sequential
+from keras.optimizers import Adam, RMSprop, Adagrad, Adadelta
 from sklearn.datasets import make_classification
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-from deap import base, creator, tools, algorithms
-from pyswarms.single import GlobalBestPSO
-from pyswarms.utils.functions import single_obj as fx
+from keras.utils import to_categorical
+from keras.callbacks import EarlyStopping
+import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.colors import ListedColormap
 
 
 # Create a neural network model
 model = Sequential()
-model.add(Dense(50, input_dim=2, activation='relu'))
-model.add(Dense(50, activation='relu'))
+model.add(Dense(64, input_dim=2, activation=LeakyReLU(alpha=0.01)))
+model.add(Dropout(0.5))
+model.add(Dense(64, activation=LeakyReLU(alpha=0.01)))
+model.add(Dropout(0.5))
+model.add(Dense(64, activation=LeakyReLU(alpha=0.01)))
+model.add(Dropout(0.5))
 model.add(Dense(2, activation='softmax'))
-model.compile(loss='binary_crossentropy', optimizer=Adam(), metrics=['accuracy'])
+
+model.compile(loss='binary_crossentropy', optimizer=Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False), metrics=['accuracy'])
 
 # Create dataset
-X, y = make_classification(n_samples=1000, n_features=2, n_informative=2, n_redundant=0, n_classes=2, n_clusters_per_class=1)
+X, y = make_classification(n_samples=10000, n_features=2, n_informative=2, n_redundant=0, n_classes=2, n_clusters_per_class=1)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1)
 
 # Train the model
-model.fit(X_train, to_categorical(y_train), epochs=10, batch_size=32, verbose=1)
+earlystopper = EarlyStopping(monitor='val_loss', min_delta=0, patience=3, verbose=1, mode='auto')
+history = model.fit(X_train, to_categorical(y_train), epochs=50, batch_size=32, validation_split=0.2, callbacks=[earlystopper], verbose=1)
 
 # Evaluate the model
 _, accuracy = model.evaluate(X_test, to_categorical(y_test), verbose=0)
 print('Accuracy: %.2f' % (accuracy*100))
+
+# Plotting the Training Loss, Validation Loss and accuracy over the epochs
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.title('Model loss')
+plt.ylabel('Loss')
+plt.xlabel('Epoch')
+plt.legend(['Train', 'Val'], loc='upper right')
+plt.show()
+
+plt.plot(history.history['accuracy'])
+plt.plot(history.history['val_accuracy'])
+plt.title('Model accuracy')
+plt.ylabel('Accuracy')
+plt.xlabel('Epoch')
+plt.legend(['Train', 'Val'], loc='lower right')
+plt.show()
 
 # Visualize the model
 x_min, x_max = X[:, 0].min() - .5, X[:, 0].max() + .5
