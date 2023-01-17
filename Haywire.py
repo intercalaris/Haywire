@@ -40,7 +40,7 @@ plt.plot(history.history['val_loss'])
 plt.title('Model loss')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
-plt.legend(['Train', 'Val'], loc='upper right')
+plt.legend(['Training Loss', 'Validation Loss'], loc='upper right')
 plt.show()
 
 plt.plot(history.history['accuracy'])
@@ -48,7 +48,7 @@ plt.plot(history.history['val_accuracy'])
 plt.title('Model accuracy')
 plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
-plt.legend(['Train', 'Val'], loc='lower right')
+plt.legend(['Training Accuracy', 'Validation Accuracy'], loc='lower right')
 plt.show()
 
 # Visualize the model
