@@ -46,10 +46,9 @@ cm_bright = ListedColormap(['#FF0000', '#0000FF'])
 ax = plt.subplot()
 ax.contourf(xx, yy, Z, cmap=cm, alpha=.8)
 ax.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=cm_bright, edgecolors='k')
-
-plt.title("Model Accuracy over Time")
-plt.xlabel("Number of Epochs")
-plt.ylabel("Accuracy")
+plt.title("Decision boundary of the trained model")
+plt.xlabel("Feature 1")
+plt.ylabel("Feature 2")
 
 plt.xlim(x_min, x_max)
 plt.ylim(y_min, y_max)
