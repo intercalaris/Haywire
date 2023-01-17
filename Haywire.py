@@ -1,19 +1,4 @@
-import numpy as np
-import random
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.optimizers import Adam
-from keras.utils import to_categorical
-from keras.models import load_model
-from keras.callbacks import TensorBoard
-import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
-from sklearn.datasets import make_classification
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-from deap import base, creator, tools, algorithms
-from pyswarms.single import GlobalBestPSO
-from pyswarms.utils.functions import single_obj as fx
+
 
 # Create a neural network model
 model = Sequential()
