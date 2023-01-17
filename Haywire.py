@@ -46,4 +46,11 @@ cm_bright = ListedColormap(['#FF0000', '#0000FF'])
 ax = plt.subplot()
 ax.contourf(xx, yy, Z, cmap=cm, alpha=.8)
 ax.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=cm_bright, edgecolors='k')
+plt.title("Simulation of Artificial Ant Colony")
+plt.xlabel("Time (s)")
+plt.ylabel("Fitness")
+
+plt.xlim(x_min, x_max)
+plt.ylim(y_min, y_max)
+
 plt.show()
