@@ -1,3 +1,6 @@
+import tensorflow as tf
+import sklearn
+import keras
 from keras.layers import Dense, LeakyReLU, Dropout, BatchNormalization
 from keras.models import Sequential
 from keras.optimizers import Adam
@@ -30,8 +33,8 @@ X, y = make_classification(n_samples=10000, n_features=2, n_informative=2, n_red
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1)
 
 # Train the model
-earlystopper = EarlyStopping(monitor='val_loss', min_delta=0, patience=3, verbose=1, mode='auto')
-reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=3, min_lr=1e-5)
+earlystopper = EarlyStopping(monitor='val_loss', min_delta=0, patience=6, verbose=1, mode='auto')
+reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=6, min_lr=1e-5)
 history = model.fit(X_train, to_categorical(y_train), epochs=100, batch_size=32, validation_split=0.2, callbacks=[earlystopper, reduce_lr], verbose=1)
 
 # Evaluate the model

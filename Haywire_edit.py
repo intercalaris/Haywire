@@ -1,41 +1,65 @@
-import os
 import tensorflow as tf
-from keras.layers import Dense, LeakyReLU, Dropout, BatchNormalization, Flatten, GlobalAveragePooling2D
-from keras.models import Sequential, Model
-from keras.optimizers import Adam
-from keras.preprocessing.image import ImageDataGenerator
-from keras.applications import VGG19
-from keras.applications.vgg19 import preprocess_input
+import sklearn
+import keras
+from keras.layers import Dense, LeakyReLU, Dropout, BatchNormalization
+from keras.models import Sequential
+from keras.optimizers import Adam, RMSprop, SGD
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+from keras.utils import to_categorical
+from keras.callbacks import EarlyStopping, ReduceLROnPlateau
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.colors import ListedColormap
+
+# Prompt the user for the number of hidden layers
+n_hidden_layers = int(input("Enter the number of hidden layers: "))
+
+# Prompt the user for the optimizer
+print("Choose the optimizer:")
+print("1. Adam")
+print("2. RMSprop")
+print("3. SGD")
+optimizer_choice = int(input("Enter your choice (1-3): "))
+if optimizer_choice == 1:
+    optimizer = Adam(learning_rate=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
+elif optimizer_choice == 2:
+    optimizer = RMSprop()
+else:
+    optimizer = SGD()
+
+# Prompt the user for the callbacks
+callbacks = []
+print("Do you want to use EarlyStopping? (y/n)")
+if input().lower() == 'y':
+    earlystopper = EarlyStopping(monitor='val_loss', min_delta=0, patience=6, verbose=1, mode='auto')
+    callbacks.append(earlystopper)
+print("Do you want to use ReduceLROnPlateau? (y/n)")
+if input().lower() == 'y':
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=6, min_lr=1e-5)
+    callbacks.append(reduce_lr)
 
 # Create a neural network model
-base_model = VGG19(weights='imagenet', include_top=False)
+model = Sequential()
+model.add(Dense(64, input_dim=2, activation=LeakyReLU(alpha=0.01)))
+model.add(Dropout(0.5))
+for i in range(n_hidden_layers):
+    model.add(Dense(64, activation=LeakyReLU(alpha=0.01)))
+    model.add(Dropout(0.5))
+model.add(Dense(2, activation='softmax'))
 
-# Freeze the layers
-for layer in base_model.layers:
-    layer.trainable = False
-
-# Add a new layer
-x = base_model.output
-x = GlobalAveragePooling2D()(x)
-x = Dense(1024, activation='relu')(x)
-x = Dropout(0.5)(x)
-predictions = Dense(2, activation='softmax')(x)
-model = Model(inputs=base_model.input, outputs=predictions)
-
-model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False), metrics=['accuracy'])
+model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 
 # Create dataset
-data_gen = ImageDataGenerator(rescale = 1./255, shear_range = 0.2, zoom_range = 0.2, horizontal_flip = True)
-X_train = data_gen.flow_from_directory('path/to/training/data', target_size = (224, 224), batch_size = 32, class_mode = 'categorical')
-X_test = data_gen.flow_from_directory('path/to/test/data', target_size = (224, 224), batch_size = 32, class_mode = 'categorical')
+X, y = make_classification(n_samples=10000, n_features=2, n_informative=2, n_redundant=0, n_classes=2, n_clusters_per_class=1)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1)
 
 # Train the model
-history = model.fit(X_train, epochs=100, batch_size=32, validation_split=0.2, verbose=1)
+history = model.fit(X_train, to_categorical(y_train), epochs=50, batch_size=32, validation_split=0.2, callbacks=callbacks, verbose=1)
 
 # Evaluate the model
-_, accuracy = model.evaluate(X_test, verbose=0)
+_, accuracy = model.evaluate(X_test, to_categorical(y_test), verbose=0)
 print('Accuracy: %.2f' % (accuracy*100))
-
 
 # Plotting the Training Loss, Validation Loss and accuracy over the epochs
 plt.plot(history.history['loss'])
@@ -43,5 +67,35 @@ plt.plot(history.history['val_loss'])
 plt.title('Model loss')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
-plt.legend(['Train', 'Validation'], loc='upper right')
+plt.legend(['Training Loss', 'Validation Loss'], loc='upper right')
+plt.show()
+
+plt.plot(history.history['accuracy'])
+plt.plot(history.history['val_accuracy'])
+plt.title('Model accuracy')
+plt.ylabel('Accuracy')
+plt.xlabel('Epoch')
+plt.legend(['Training Accuracy', 'Validation Accuracy'], loc='lower right')
+plt.show()
+
+# Visualize the model
+x_min, x_max = X[:, 0].min() - .5, X[:, 0].max() + .5
+y_min, y_max = X[:, 1].min() - .5, X[:, 1].max() + .5
+h = .02
+xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+Z = model.predict(np.c_[xx.ravel(), yy.ravel()])
+Z = np.argmax(Z, axis=1)
+Z = Z.reshape(xx.shape)
+cm = plt.cm.RdBu
+cm_bright = ListedColormap(['#FF0000', '#0000FF'])
+ax = plt.subplot()
+ax.contourf(xx, yy, Z, cmap=cm, alpha=.8)
+ax.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=cm_bright, edgecolors='k')
+plt.title("Decision boundary of the trained model")
+plt.xlabel("Feature 1")
+plt.ylabel("Feature 2")
+
+plt.xlim(x_min, x_max)
+plt.ylim(y_min, y_max)
+
 plt.show()
