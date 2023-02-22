@@ -64,7 +64,6 @@ for i in range(n_hidden_layers):
     model.add(Dropout(0.5))
 
 model.add(Dense(2, activation='softmax'))
-
 model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 
 
@@ -112,8 +111,6 @@ ax.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=cm_bright, edgecolors='k')
 plt.title("Decision boundary of the trained model")
 plt.xlabel("Feature 1")
 plt.ylabel("Feature 2")
-
 plt.xlim(x_min, x_max)
 plt.ylim(y_min, y_max)
-
 plt.show()
