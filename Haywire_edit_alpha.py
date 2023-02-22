@@ -13,14 +13,15 @@ import numpy as np
 from matplotlib.colors import ListedColormap
 
 # Prompt the user for the number of hidden layers
+print("The number of hidden layers in a neural network are the layers between the input and output layers. Each hidden layer consists of a number of neurons. The number of neurons contributes to the complexity of the model. A larger number of neurons may lead to overfitting, while a smaller number of neurons may lead to underfitting.")
 print("Please enter the number of hidden layers you want to include in the model (minimum 1): ")
 n_hidden_layers = int(input())
 
 # Prompt the user for the optimizer
-print("Choose the optimizer you want to use:")
-print("1. Adam: Adaptive Moment Estimation (Adam) is an optimization algorithm that can be used to optimize deep learning models with gradient descent.")
-print("2. RMSprop: Root Mean Square Propagation (RMSprop) is an optimization algorithm that is used to minimize the fluctuations in the learning rate during the training process.")
-print("3. SGD: Stochastic Gradient Descent (SGD) is a widely used optimization algorithm for training deep learning models.")
+print("The optimizer is an algorithm that is used to adjust the weights of the neural network during training in order to minimize the loss function. Choose the optimizer you want to use:")
+print("1. Adam: Adaptive Moment Estimation (Adam) is an optimization algorithm that combines the best features of two others, Adagrad and RMSprop, to adjust learning rates on a per-parameter basis. Adam is particularly useful for deep learning models and for data with high dimensionality.")
+print("2. RMSprop: Root Mean Square Propagation (RMSprop) is an optimization algorithm that is used to minimize the fluctuations in the learning rate during the training process. RMSprop works by dividing the learning rate by an exponentially decaying average of the squared gradients.")
+print("3. SGD: Stochastic Gradient Descent (SGD) updates the model's parameters based on the gradient (direction and rate of change) of the loss function. It does this by sampling random subsets of the training data instead of the entire data set. This makes SGD particularly useful for large datasets because it can converge faster than other optimization algorithms.")
 optimizer_choice = int(input("Enter your choice (1-3): "))
 
 if optimizer_choice == 1:
@@ -65,7 +66,6 @@ for i in range(n_hidden_layers):
 
 model.add(Dense(2, activation='softmax'))
 model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
-
 
 # Create dataset
 X, y = make_classification(n_samples=10000, n_features=2, n_informative=2, n_redundant=0, n_classes=2, n_clusters_per_class=1)
