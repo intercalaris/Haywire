@@ -56,7 +56,7 @@ plt.title('Model accuracy')
 plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
 plt.legend(['Training Accuracy', 'Validation Accuracy'], loc='lower right')
-plt.show()
+plt.show() 
 
 # Visualize the model
 x_min, x_max = X[:, 0].min() - .5, X[:, 0].max() + .5
@@ -78,4 +78,4 @@ plt.ylabel("Feature 2")
 plt.xlim(x_min, x_max)
 plt.ylim(y_min, y_max)
 
-plt.show()
+plt.show() 
