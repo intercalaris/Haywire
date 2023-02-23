@@ -10,7 +10,7 @@ from keras.utils import to_categorical
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.colors import ListedColormap
+from matplotlib.colors import ListedColormap 
 
 
 print("\nThis Python program is an educational tool for understanding the basics of neural network construction, training, and evaluation. It uses the TensorFlow, Keras, and Scikit-learn libraries.")
