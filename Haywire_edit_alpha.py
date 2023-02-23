@@ -19,9 +19,9 @@ print("This program prompts you to input the number of hidden layers, the optimi
 print("It then creates a neural network model with the specified number of hidden layers and neurons using Dense, LeakyReLU, Dropout, and BatchNormalization layers.")
 print("Next, it trains the model on a randomly generated classification dataset using the specified optimizer and callbacks.")
 print("Finally, the program visualizes the training and validation loss and accuracy, as well as the decision boundary of the trained model using a matplotlib colormap.")
-input("Click enter to continue!")
+input("\nClick enter to continue!")
 # Prompt the user for the number of hidden layers
-print("\nThe hidden layers in a neural network are the layers between the input and output layers. The number of hidden layers affects the model's ability to learn and generalize from the training data.\nA deeper network (more layers) could learn more complex features, but might be more prone to overfitting data.\nOne or two hidden layers are often used initially, with more added gradually to see if the additional layers improve the model's performance.")
+print("\n\n\n\n\n\nThe hidden layers in a neural network are the layers between the input and output layers. The number of hidden layers affects the model's ability to learn and generalize from the training data.\nA deeper network (more layers) could learn more complex features, but might be more prone to overfitting data.\nOne or two hidden layers are often used initially, with more added gradually to see if the additional layers improve the model's performance.")
 print("\nPlease enter the number of hidden layers you want to include in the model (minimum 1): ")
 n_hidden_layers = int(input())
 
@@ -36,9 +36,7 @@ optimizer_choice = int(input("\nEnter your choice (1-3): "))
 print("\nThe learning rate is a hyperparameter (a set value that affects model behavior) that controls the step size taken during training.\nA higher learning rate means bigger steps and faster convergence, but also risks overshooting the minimum (lowest point on a loss function, indicating best values for model's parameters).\nA lower learning rate means smaller steps and slower convergence, but it is less likely to overshoot the minimum.")
 if optimizer_choice == 1:
     learning_rate = float(input("\nEnter the learning rate for Adam (default is 0.001): "))
-    beta_1 = float(input("Enter the value of beta_1 for Adam (default is 0.9): "))
-    beta_2 = float(input("Enter the value of beta_2 for Adam (default is 0.999): "))
-    optimizer = Adam(learning_rate=learning_rate, beta_1=beta_1, beta_2=beta_2, epsilon=None, decay=0.0, amsgrad=False)
+    optimizer = Adam(learning_rate=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
     
 elif optimizer_choice == 2:
     learning_rate = float(input("\nEnter the learning rate for RMSprop (default is 0.001): "))
@@ -71,7 +69,7 @@ model.add(Dropout(0.5))
 
 for i in range(n_hidden_layers):
     print("\nEach hidden layer consists of a number of neurons. The number contributes to the model's complexity.\nA larger number of neurons may lead to overfitting, while a smaller number of neurons may lead to underfitting.")
-    print(f"\nEnter the number of neurons in hidden layer {i+1}: ")
+    print(f"\nEnter the number of neurons in hidden layer {i+1}: (default is 64 neurons)")
     n_neurons = int(input())
     model.add(Dense(n_neurons, activation=LeakyReLU(alpha=0.01)))
     model.add(Dropout(0.5))
