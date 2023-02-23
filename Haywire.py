@@ -15,8 +15,8 @@ from matplotlib.colors import ListedColormap
 
 print("\nThis Python program is an educational tool for understanding the basics of neural network construction, training, and evaluation. It uses the TensorFlow, Keras, and Scikit-learn libraries.")
 
-print("This program prompts you to input the number of hidden layers, the optimizer, the learning rate, and whether to use EarlyStopping and ReduceLROnPlateau callbacks.")
-print("It then creates a neural network model with the specified number of hidden layers and neurons using Dense, LeakyReLU, Dropout, and BatchNormalization layers.")
+print("It prompts you to input the number of hidden layers, the optimizer, the learning rate, and whether to use EarlyStopping and ReduceLROnPlateau callbacks.")
+print("Then, it creates a neural network model with the specified number of hidden layers and neurons using Dense, LeakyReLU, Dropout, and BatchNormalization layers.")
 print("Next, it trains the model on a randomly generated classification dataset using the specified optimizer and callbacks.")
 print("Finally, the program visualizes the training and validation loss and accuracy, as well as the decision boundary of the trained model using a matplotlib colormap.")
 input("\nClick enter to continue!")
