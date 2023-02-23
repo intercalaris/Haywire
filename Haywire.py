@@ -3,7 +3,7 @@ import sklearn
 import keras
 from keras.layers import Dense, LeakyReLU, Dropout, BatchNormalization
 from keras.models import Sequential
-from keras.optimizers import Adam
+from keras.optimizers import Adam, RMSprop, SGD
 from sklearn.datasets import make_classification
 from sklearn.model_selection import train_test_split
 from keras.utils import to_categorical
@@ -12,30 +12,77 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import ListedColormap
 
+
+print("\nThis Python program is an educational tool for understanding the basics of neural network construction, training, and evaluation. It uses the TensorFlow, Keras, and Scikit-learn libraries.")
+
+print("This program prompts you to input the number of hidden layers, the optimizer, the learning rate, and whether to use EarlyStopping and ReduceLROnPlateau callbacks.")
+print("It then creates a neural network model with the specified number of hidden layers and neurons using Dense, LeakyReLU, Dropout, and BatchNormalization layers.")
+print("Next, it trains the model on a randomly generated classification dataset using the specified optimizer and callbacks.")
+print("Finally, the program visualizes the training and validation loss and accuracy, as well as the decision boundary of the trained model using a matplotlib colormap.")
+input("\nClick enter to continue!")
+# Prompt the user for the number of hidden layers
+print("\n\n\n\n\n\nThe hidden layers in a neural network are the layers between the input and output layers. The number of hidden layers affects the model's ability to learn and generalize from the training data.\nA deeper network (more layers) could learn more complex features, but might be more prone to overfitting data.\nOne or two hidden layers are often used initially, with more added gradually to see if the additional layers improve the model's performance.")
+print("\nPlease enter the number of hidden layers you want to include in the model (minimum 1): ")
+n_hidden_layers = int(input())
+
+# Prompt the user for the optimizer
+print("\nThe optimizer is an algorithm that is used to adjust the weights of the neural network during training to minimize the loss function. Choose the optimizer you want to use:")
+print("1. Adam: Adaptive Moment Estimation (Adam) combines the best features of two other optimizers, Adagrad and RMSprop, to adjust learning rates on a per-parameter basis. Adam is particularly useful for deep learning models and for data with high dimensionality.")
+print("2. RMSprop: Root Mean Square Propagation (RMSprop) is used to minimize the fluctuations in the learning rate during the training process. RMSprop works by dividing the learning rate by an exponentially decaying average of the squared gradients.")
+print("3. SGD: Stochastic Gradient Descent (SGD) updates the model's parameters based on the gradient (direction and rate of change) of the loss function by sampling random subsets of the training data instead of the entire data set. This makes SGD useful for large datasets as it can converge faster.")
+
+optimizer_choice = int(input("\nEnter your choice (1-3): "))
+
+print("\nThe learning rate is a hyperparameter (a set value that affects model behavior) that controls the step size taken during training.\nA higher learning rate means bigger steps and faster convergence, but also risks overshooting the minimum (lowest point on a loss function, indicating best values for model's parameters).\nA lower learning rate means smaller steps and slower convergence, but it is less likely to overshoot the minimum.")
+if optimizer_choice == 1:
+    learning_rate = float(input("\nEnter the learning rate for Adam (default is 0.001): "))
+    optimizer = Adam(learning_rate=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
+    
+elif optimizer_choice == 2:
+    learning_rate = float(input("\nEnter the learning rate for RMSprop (default is 0.001): "))
+    optimizer = RMSprop(learning_rate=learning_rate)
+    
+else:
+    learning_rate = float(input("\nEnter the learning rate for SGD (default is 0.01): "))
+    optimizer = SGD(learning_rate=learning_rate)
+
+# Prompt the user for the callbacks
+callbacks = []
+print("Callbacks are functions in deep learning models that can be applied at certain stages of the training process, such as at the end of each epoch (a cycle through the entire training dataset during training).\nThey provide a way to customize the behavior of the model during training and to monitor its performance.\nExamples of commonly used callbacks include EarlyStopping and ReduceLROnPlateau, which are used to stop training early if the validation loss does not improve or to reduce the learning rate if the model stops improving during training.")
+print("\nDo you want to use EarlyStopping? (y/n)")
+if input().lower() == 'y':
+    patience = int(input("Enter the value of patience, or # of epochs without reduction in loss, before early stopping is implemented (default is 6): "))
+    earlystopper = EarlyStopping(monitor='val_loss', min_delta=0, patience=patience, verbose=1, mode='auto')
+    callbacks.append(earlystopper)
+    
+print("\nDo you want to use ReduceLROnPlateau? (y/n)")
+if input().lower() == 'y':
+    patience = int(input("Enter the value of patience, or # of epochs without reduction in loss, before ReduceLROnPlateau is implemented (default is 6): "))
+    factor = float(input("Enter the factor (by which the learning rate will be reduced) for ReduceLROnPlateau (default is 0.1): "))
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=factor, patience=patience, min_lr=1e-5)
+    callbacks.append(reduce_lr)
+
 # Create a neural network model
 model = Sequential()
 model.add(Dense(64, input_dim=2, activation=LeakyReLU(alpha=0.01)))
 model.add(Dropout(0.5))
-model.add(Dense(64, activation=LeakyReLU(alpha=0.01)))
-model.add(Dropout(0.5))
-model.add(Dense(64, activation=LeakyReLU(alpha=0.01)))
-model.add(Dropout(0.5))
-model.add(Dense(64, activation=LeakyReLU(alpha=0.01)))
-model.add(Dropout(0.5))
-model.add(Dense(64, activation=LeakyReLU(alpha=0.01)))
-model.add(Dropout(0.5))
-model.add(Dense(2, activation='softmax'))
 
-model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False), metrics=['accuracy'])
+for i in range(n_hidden_layers):
+    print("\nEach hidden layer consists of a number of neurons. The number contributes to the model's complexity.\nA larger number of neurons may lead to overfitting, while a smaller number of neurons may lead to underfitting.")
+    print(f"\nEnter the number of neurons in hidden layer {i+1}: (default is 64 neurons)")
+    n_neurons = int(input())
+    model.add(Dense(n_neurons, activation=LeakyReLU(alpha=0.01)))
+    model.add(Dropout(0.5))
+
+model.add(Dense(2, activation='softmax'))
+model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 
 # Create dataset
 X, y = make_classification(n_samples=10000, n_features=2, n_informative=2, n_redundant=0, n_classes=2, n_clusters_per_class=1)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1)
 
 # Train the model
-earlystopper = EarlyStopping(monitor='val_loss', min_delta=0, patience=6, verbose=1, mode='auto')
-reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=6, min_lr=1e-5)
-history = model.fit(X_train, to_categorical(y_train), epochs=100, batch_size=32, validation_split=0.2, callbacks=[earlystopper, reduce_lr], verbose=1)
+history = model.fit(X_train, to_categorical(y_train), epochs=50, batch_size=32, validation_split=0.2, callbacks=callbacks, verbose=1)
 
 # Evaluate the model
 _, accuracy = model.evaluate(X_test, to_categorical(y_test), verbose=0)
@@ -56,7 +103,7 @@ plt.title('Model accuracy')
 plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
 plt.legend(['Training Accuracy', 'Validation Accuracy'], loc='lower right')
-plt.show() 
+plt.show()
 
 # Visualize the model
 x_min, x_max = X[:, 0].min() - .5, X[:, 0].max() + .5
@@ -74,8 +121,6 @@ ax.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=cm_bright, edgecolors='k')
 plt.title("Decision boundary of the trained model")
 plt.xlabel("Feature 1")
 plt.ylabel("Feature 2")
-
 plt.xlim(x_min, x_max)
 plt.ylim(y_min, y_max)
-
-plt.show() 
+plt.show()
