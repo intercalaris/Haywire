@@ -15,9 +15,9 @@ from matplotlib.colors import ListedColormap
 
 print("\nThis Python program is an educational tool for understanding the basics of neural network construction, training, and evaluation. It uses the TensorFlow, Keras, and Scikit-learn libraries.")
 
-print("It prompts you to input the number of hidden layers, the optimizer, the learning rate, and whether to use EarlyStopping and ReduceLROnPlateau callbacks.")
-print("Then, it creates a neural network model with the specified number of hidden layers and neurons using Dense, LeakyReLU, Dropout, and BatchNormalization layers.")
-print("Next, it trains the model on a randomly generated classification dataset using the specified optimizer and callbacks.")
+print("It prompts you to input the number of hidden layers, the optimizer, the learning rate, and whether to use EarlyStopping and ReduceLROnPlateau callbacks and creates a")
+print("neural network model with the specified number of hidden layers and neurons using Dense, LeakyReLU, Dropout, and BatchNormalization layers.")
+print("It then trains the model on a randomly generated classification dataset using the specified optimizer and callbacks.")
 print("Finally, the program visualizes the training and validation loss and accuracy, as well as the decision boundary of the trained model using a matplotlib colormap.")
 input("\nClick enter to continue!")
 # Prompt the user for the number of hidden layers
@@ -48,18 +48,21 @@ else:
 
 # Prompt the user for the callbacks
 callbacks = []
+patience_es = None
+patience_lr = None
+factor = None
 print("Callbacks are functions in deep learning models that can be applied at certain stages of the training process, such as at the end of each epoch (a cycle through the entire training dataset during training).\nThey provide a way to customize the behavior of the model during training and to monitor its performance.\nExamples of commonly used callbacks include EarlyStopping and ReduceLROnPlateau, which are used to stop training early if the validation loss does not improve or to reduce the learning rate if the model stops improving during training.")
 print("\nDo you want to use EarlyStopping? (y/n)")
 if input().lower() == 'y':
-    patience = int(input("Enter the value of patience, or # of epochs without reduction in loss, before early stopping is implemented (default is 6): "))
-    earlystopper = EarlyStopping(monitor='val_loss', min_delta=0, patience=patience, verbose=1, mode='auto')
+    patience_es = int(input("Enter the value of patience, or # of epochs without reduction in loss, before early stopping is implemented (default is 6): "))
+    earlystopper = EarlyStopping(monitor='val_loss', min_delta=0, patience=patience_es, verbose=1, mode='auto')
     callbacks.append(earlystopper)
-    
+
 print("\nDo you want to use ReduceLROnPlateau? (y/n)")
 if input().lower() == 'y':
-    patience = int(input("Enter the value of patience, or # of epochs without reduction in loss, before ReduceLROnPlateau is implemented (default is 6): "))
+    patience_lr = int(input("Enter the value of patience, or # of epochs without reduction in loss, before ReduceLROnPlateau is implemented (default is 6): "))
     factor = float(input("Enter the factor (by which the learning rate will be reduced) for ReduceLROnPlateau (default is 0.1): "))
-    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=factor, patience=patience, min_lr=1e-5)
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=factor, patience=patience_lr, min_lr=1e-5)
     callbacks.append(reduce_lr)
 
 # Create a neural network model
@@ -67,10 +70,13 @@ model = Sequential()
 model.add(Dense(64, input_dim=2, activation=LeakyReLU(alpha=0.01)))
 model.add(Dropout(0.5))
 
+neurons_in_layers = []
+
 for i in range(n_hidden_layers):
     print("\nEach hidden layer consists of a number of neurons. The number contributes to the model's complexity.\nA larger number of neurons may lead to overfitting, while a smaller number of neurons may lead to underfitting.")
     print(f"\nEnter the number of neurons in hidden layer {i+1}: (default is 64 neurons)")
     n_neurons = int(input())
+    neurons_in_layers.append(n_neurons)
     model.add(Dense(n_neurons, activation=LeakyReLU(alpha=0.01)))
     model.add(Dropout(0.5))
 
@@ -89,12 +95,35 @@ _, accuracy = model.evaluate(X_test, to_categorical(y_test), verbose=0)
 print('Accuracy: %.2f' % (accuracy*100))
 
 # Plotting the Training Loss, Validation Loss and accuracy over the epochs
+def plot_customizations(n_hidden_layers, neurons_in_layers, optimizer_choice, learning_rate, callbacks, patience_es, patience_lr, factor):
+    customizations = f"Customizations:"
+    customizations += f" | # of Hidden Layers: {n_hidden_layers}"
+    for i in range(n_hidden_layers):
+        customizations += f" | # of Neurons in H.L. {i+1}: {neurons_in_layers[i]}"
+    customizations += f" | Optimizer: {optimizer_choice}"
+    customizations += f" | Learning Rate: {learning_rate}"
+    
+    if not callbacks:
+        customizations += f" | Callbacks: None"
+    else:
+        customizations += f" | Callbacks:"
+        if patience_es is not None:
+            customizations += f" EarlyStopping (patience: {patience_es})"
+        if patience_lr is not None:
+            customizations += f", ReduceLROnPlateau (patience: {patience_lr}, factor: {factor})"
+    
+    plt.figtext(0.5, 0.05, customizations, wrap=True, horizontalalignment='center', fontsize=8)
+
 plt.plot(history.history['loss'])
 plt.plot(history.history['val_loss'])
 plt.title('Model loss')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend(['Training Loss', 'Validation Loss'], loc='upper right')
+plot_customizations(n_hidden_layers, neurons_in_layers, optimizer_choice, learning_rate, callbacks, patience_es, patience_lr, factor)
+plt.gcf().set_size_inches(8, 6)
+plt.tight_layout()
+plt.subplots_adjust(bottom=0.18)
 plt.show()
 
 plt.plot(history.history['accuracy'])
@@ -103,6 +132,10 @@ plt.title('Model accuracy')
 plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
 plt.legend(['Training Accuracy', 'Validation Accuracy'], loc='lower right')
+plot_customizations(n_hidden_layers, neurons_in_layers, optimizer_choice, learning_rate, callbacks, patience_es, patience_lr, factor)
+plt.gcf().set_size_inches(8, 6)
+plt.tight_layout()
+plt.subplots_adjust(bottom=0.18)
 plt.show()
 
 # Visualize the model
@@ -119,8 +152,12 @@ ax = plt.subplot()
 ax.contourf(xx, yy, Z, cmap=cm, alpha=.8)
 ax.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=cm_bright, edgecolors='k')
 plt.title("Decision boundary of the trained model")
+plot_customizations(n_hidden_layers, neurons_in_layers, optimizer_choice, learning_rate, callbacks, patience_es, patience_lr, factor)
 plt.xlabel("Feature 1")
 plt.ylabel("Feature 2")
 plt.xlim(x_min, x_max)
 plt.ylim(y_min, y_max)
+plt.gcf().set_size_inches(8, 6)
+plt.tight_layout()
+plt.subplots_adjust(bottom=0.18)
 plt.show()
