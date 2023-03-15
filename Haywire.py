@@ -37,15 +37,17 @@ print("\nThe learning rate is a hyperparameter (a set value that affects model b
 if optimizer_choice == 1:
     learning_rate = float(input("\nEnter the learning rate for Adam (default is 0.001): "))
     optimizer = Adam(learning_rate=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
-    
+    optimizer_name = "Adam"
+
 elif optimizer_choice == 2:
     learning_rate = float(input("\nEnter the learning rate for RMSprop (default is 0.001): "))
     optimizer = RMSprop(learning_rate=learning_rate)
-    
+    optimizer_name = "RMSprop"
 else:
     learning_rate = float(input("\nEnter the learning rate for SGD (default is 0.01): "))
     optimizer = SGD(learning_rate=learning_rate)
-
+    optimizer_name = "SGD" 
+    
 # Prompt the user for the callbacks
 callbacks = []
 patience_es = None
@@ -95,12 +97,12 @@ _, accuracy = model.evaluate(X_test, to_categorical(y_test), verbose=0)
 print('Accuracy: %.2f' % (accuracy*100))
 
 # Plotting the Training Loss, Validation Loss and accuracy over the epochs
-def plot_customizations(n_hidden_layers, neurons_in_layers, optimizer_choice, learning_rate, callbacks, patience_es, patience_lr, factor):
+def plot_customizations(n_hidden_layers, neurons_in_layers, optimizer_name, learning_rate, callbacks, patience_es, patience_lr, factor):
     customizations = f"Customizations:"
     customizations += f" | # of Hidden Layers: {n_hidden_layers}"
     for i in range(n_hidden_layers):
         customizations += f" | # of Neurons in H.L. {i+1}: {neurons_in_layers[i]}"
-    customizations += f" | Optimizer: {optimizer_choice}"
+    customizations += f" | Optimizer: {optimizer_name}"  # Use the optimizer's name instead of the choice number
     customizations += f" | Learning Rate: {learning_rate}"
     
     if not callbacks:
@@ -120,7 +122,7 @@ plt.title('Model loss')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend(['Training Loss', 'Validation Loss'], loc='upper right')
-plot_customizations(n_hidden_layers, neurons_in_layers, optimizer_choice, learning_rate, callbacks, patience_es, patience_lr, factor)
+plot_customizations(n_hidden_layers, neurons_in_layers, optimizer_name, learning_rate, callbacks, patience_es, patience_lr, factor)
 plt.gcf().set_size_inches(8, 6)
 plt.tight_layout()
 plt.subplots_adjust(bottom=0.18)
@@ -132,7 +134,7 @@ plt.title('Model accuracy')
 plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
 plt.legend(['Training Accuracy', 'Validation Accuracy'], loc='lower right')
-plot_customizations(n_hidden_layers, neurons_in_layers, optimizer_choice, learning_rate, callbacks, patience_es, patience_lr, factor)
+plot_customizations(n_hidden_layers, neurons_in_layers, optimizer_name, learning_rate, callbacks, patience_es, patience_lr, factor)
 plt.gcf().set_size_inches(8, 6)
 plt.tight_layout()
 plt.subplots_adjust(bottom=0.18)
@@ -152,7 +154,7 @@ ax = plt.subplot()
 ax.contourf(xx, yy, Z, cmap=cm, alpha=.8)
 ax.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=cm_bright, edgecolors='k')
 plt.title("Decision boundary of the trained model")
-plot_customizations(n_hidden_layers, neurons_in_layers, optimizer_choice, learning_rate, callbacks, patience_es, patience_lr, factor)
+plot_customizations(n_hidden_layers, neurons_in_layers, optimizer_name, learning_rate, callbacks, patience_es, patience_lr, factor)
 plt.xlabel("Feature 1")
 plt.ylabel("Feature 2")
 plt.xlim(x_min, x_max)
