@@ -1,4 +1,3 @@
-import tensorflow as tf
 import sklearn
 import keras
 from keras.layers import Dense, LeakyReLU, Dropout, BatchNormalization
